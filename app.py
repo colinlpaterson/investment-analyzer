@@ -78,7 +78,7 @@ with st.sidebar:
     st.markdown("""
     **Version:** 1.0.0
     
-    **Created by:** Colin Patterson
+    **Created by:** Colin Paterson
     
     **GitHub:** [stock-performance-analyzer](https://github.com/colinlpaterson/stock-performance-analyzer)
     """)
