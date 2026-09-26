@@ -36,6 +36,11 @@ def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> p
     df["Year"] = df["Date"].dt.year
     df["Month"] = df["Date"].dt.month
     
+    # Preserve the preceding December before filtering the requested years.
+    dec_baseline = df[df["Month"] == 12].copy()
+    dec_baseline["Year"] = dec_baseline["Year"] + 1
+    dec_baseline = dec_baseline.set_index("Year")["Close"]
+
     # Filter to specified date range AND only completed months
     df = df[df["Year"].between(start_year, end_year)].copy()
     
@@ -44,11 +49,6 @@ def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> p
     if end_year == today.year:
         # Only include months before the current month
         df = df[~((df["Year"] == end_year) & (df["Month"] >= today.month))].copy()
-    
-    # Calculate prior December baseline for each year
-    dec_baseline = df[df["Month"] == 12].copy()
-    dec_baseline["Year"] = dec_baseline["Year"] + 1
-    dec_baseline = dec_baseline.set_index("Year")["Close"]
     
     # Calculate YTD return
     df["YTD"] = df["Close"] / df["Year"].map(dec_baseline) - 1

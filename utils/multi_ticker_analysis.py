@@ -140,9 +140,9 @@ def calculate_comparison_statistics(
         current_series = data.get('current')
         prior_series = data.get('prior')
         
-        # Get final values for each period
-        current_return = current_series.iloc[-1] if current_series is not None and len(current_series) > 0 else np.nan
-        prior_return = prior_series.iloc[-1] if prior_series is not None and len(prior_series) > 0 else np.nan
+        # Compare the same endpoint; an earlier observation is not a substitute.
+        current_return = current_series.get(last_month, np.nan) if current_series is not None else np.nan
+        prior_return = prior_series.get(last_month, np.nan) if prior_series is not None else np.nan
         
         # Calculate difference
         if not np.isnan(current_return) and not np.isnan(prior_return):

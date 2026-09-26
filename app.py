@@ -45,7 +45,7 @@ This application provides powerful tools for analyzing stock and ETF performance
 ### 📊 Data Source
 
 All data is sourced from **Yahoo Finance** using the yfinance library. Data includes:
-- Monthly adjusted close prices
+- Monthly split-adjusted closing prices
 - Historical data back to the early 2000s (varies by ticker)
 - Real-time updates for current year data
 

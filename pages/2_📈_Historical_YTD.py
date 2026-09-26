@@ -37,7 +37,7 @@ st.markdown("""
 Analyze year-to-date (YTD) price returns for any stock or ETF across multiple years.
 Compare current year performance against historical trends to identify patterns and outliers.
 
-**Note:** All prices are adjusted close prices, which account for stock splits but not dividends.
+**Note:** All prices are split-adjusted closing prices, which account for stock splits but not dividends.
 """)
 
 # Sidebar for inputs
@@ -90,11 +90,11 @@ with st.sidebar.expander("ℹ️ About YTD Calculation"):
     st.markdown("""
     **YTD Return Formula:**
     ```
-    YTD = (Current Month Adj Close / Prior December Adj Close) - 1
+    YTD = (Current Month Close / Prior December Close) - 1
     ```
     
     - Measures price return only (excludes dividends)
-    - Uses adjusted close prices (accounts for splits)
+    - Uses split-adjusted closing prices (accounts for splits)
     - Each year starts from prior December close
     - Current year shows completed months only
     - Historical years shown in grey for comparison
@@ -113,7 +113,7 @@ if analyze_button:
                 st.stop()
             
             # Load data
-            data = load_ticker_data(ticker, f"{start_year}-01-01")
+            data = load_ticker_data(ticker, f"{start_year - 1}-12-01")
             
             if data is None or len(data) == 0:
                 st.error(f"❌ No data available for {ticker} starting from {start_year}")
@@ -208,13 +208,13 @@ if analyze_button:
                 
                 **Methodology:**
                 - YTD return measured from prior December month-end to each subsequent month-end
-                - Uses adjusted close prices (accounts for stock splits, not dividends)
+                - Uses split-adjusted closing prices (accounts for stock splits, not dividends)
                 - Price return only - does not include dividend distributions (total return)
                 - {summary_stats['highlight_year']} line ends at last completed month
                 - Average calculated across {summary_stats['n_years']} completed years
-                - Dates represent the last trading day of each month
+                - Dates label calendar month-end; prices come from the last trading day
                 
-                **Note:** Adjusted close prices account for stock splits but do NOT include reinvested dividends.
+                **Note:** Split-adjusted closing prices account for stock splits but do NOT include reinvested dividends.
                 This analysis shows pure price appreciation/depreciation.
                 """)
             
@@ -223,10 +223,9 @@ if analyze_button:
             
             # Prepare data for download
             export_data = ytd_data[['Date', 'Year', 'Month', 'Close', 'YTD']].copy()
-            export_data = export_data.rename(columns={'Close': 'Adj Close'})
             export_data['YTD'] = export_data['YTD'] * 100  # Convert to percentage
             
-            # Date is already the last trading day of the month from resampling
+            # Resampling labels observations with calendar month-end dates
             # Format as date only (no time component)
             export_data['Date'] = pd.to_datetime(export_data['Date']).dt.date
             
@@ -236,7 +235,7 @@ if analyze_button:
                 data=csv,
                 file_name=f"{ticker}_ytd_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv",
-                help="Download data with adjusted close prices (last trading day of each month)"
+                help="Download data with split-adjusted closing prices (calendar month-end labels)"
             )
 
 else:
@@ -265,9 +264,9 @@ else:
     - **GLD** - Gold ETF
     - **TLT** - 20+ Year Treasury Bond ETF
     
-    ### About Adjusted Close Prices
+    ### About Split-Adjusted Closing Prices
     
-    This analysis uses **adjusted close prices** which:
+    This analysis uses **split-adjusted closing prices** which:
     - ✅ Account for stock splits
     - ❌ Do NOT include dividends
     - Show pure price return (capital appreciation only)
@@ -275,4 +274,4 @@ else:
 
 # Footer
 st.markdown("---")
-st.caption("Data provided by Yahoo Finance. Adjusted close prices used (accounts for splits, not dividends). For informational purposes only. Not financial advice.")
+st.caption("Data provided by Yahoo Finance. Split-adjusted closing prices used (accounts for splits, not dividends). For informational purposes only. Not financial advice.")

@@ -1,0 +1,31 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python: '3.10'
+            dependencies: minimum
+          - python: '3.13'
+            dependencies: current
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install minimum dependencies
+        if: matrix.dependencies == 'minimum'
+        run: >-
+          python -m pip install -r requirements-dev.txt
+          pandas==2.0.3 numpy==1.24.4 streamlit==1.31.0
+          yfinance==0.2.36 plotly==5.18.0
+      - name: Install current dependencies
+        if: matrix.dependencies == 'current'
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run regression tests
+        run: python -m pytest -q

@@ -31,7 +31,8 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
         data = yf.download(
             ticker,
             start=start_date,
-            auto_adjust=True,
+            # Yahoo's Close is split-adjusted; Adj Close also adjusts dividends.
+            auto_adjust=False,
             progress=False
         )
         
@@ -44,7 +45,7 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
             return None
         
         # Resample to monthly - take last trading day of each month
-        monthly_data = data.resample('ME').agg({
+        monthly_data = data.resample(pd.offsets.MonthEnd()).agg({
             'Open': 'first',
             'High': 'max',
             'Low': 'min',

@@ -93,6 +93,20 @@ stock-performance-analyzer/
 - **Pandas**: Data manipulation
 - **NumPy**: Numerical computations
 
+## Tests
+
+Install development dependencies and run the offline regression suite:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+Tests use synthetic market data and mocked Yahoo Finance downloads, including a
+Streamlit page test. They cover price-only returns, the first requested year's
+December baseline, completed-month filtering, and matching comparison endpoints.
+GitHub Actions also checks compatibility with pandas 2.0 and current dependencies.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
