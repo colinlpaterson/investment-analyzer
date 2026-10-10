@@ -4,18 +4,43 @@ YTD analysis utilities for calculating year-to-date returns.
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Literal, Tuple
 
 
-def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> pd.DataFrame:
+ReturnType = Literal["price", "total"]
+
+RETURN_TYPE_LABELS = {
+    "price": "Price return",
+    "total": "Total return",
+}
+
+RETURN_TYPE_COLUMNS = {
+    "price": "Close",
+    "total": "Adj Close",
+}
+
+
+def get_return_label(return_type: ReturnType) -> str:
+    """Return the display label for a supported return methodology."""
+    try:
+        return RETURN_TYPE_LABELS[return_type]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported return type: {return_type}") from exc
+
+
+def calculate_ytd_returns(
+    df: pd.DataFrame,
+    start_year: int,
+    end_year: int,
+    return_type: ReturnType = "price",
+) -> pd.DataFrame:
     """
     Calculate year-to-date returns based on prior December baseline.
     
-    YTD Return = (Current Month Close / Prior December Close) - 1
+    YTD Return = (Current Month Value / Prior December Value) - 1
     
-    This measures the cumulative price return from the prior year's December close
-    to each month-end within the calendar year. This does NOT include dividends
-    (total return), only price appreciation.
+    Price return uses split-adjusted Close. Total return uses Yahoo Finance's
+    dividend-adjusted Adj Close as a total-return proxy.
     
     Parameters
     ----------
@@ -25,12 +50,23 @@ def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> p
         Starting year for analysis
     end_year : int
         Ending year for analysis
+    return_type : {"price", "total"}
+        Return methodology. Defaults to price return for backward compatibility.
         
     Returns
     -------
     pd.DataFrame
         DataFrame with Year, Month, and YTD columns
     """
+    if return_type not in RETURN_TYPE_COLUMNS:
+        raise ValueError(f"Unsupported return type: {return_type}")
+
+    value_column = RETURN_TYPE_COLUMNS[return_type]
+    if value_column not in df.columns:
+        raise ValueError(
+            f"{get_return_label(return_type)} requires the '{value_column}' column"
+        )
+
     # Extract year and month
     df = df.copy()
     df["Year"] = df["Date"].dt.year
@@ -39,7 +75,7 @@ def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> p
     # Preserve the preceding December before filtering the requested years.
     dec_baseline = df[df["Month"] == 12].copy()
     dec_baseline["Year"] = dec_baseline["Year"] + 1
-    dec_baseline = dec_baseline.set_index("Year")["Close"]
+    dec_baseline = dec_baseline.set_index("Year")[value_column]
 
     # Filter to specified date range AND only completed months
     df = df[df["Year"].between(start_year, end_year)].copy()
@@ -51,7 +87,7 @@ def calculate_ytd_returns(df: pd.DataFrame, start_year: int, end_year: int) -> p
         df = df[~((df["Year"] == end_year) & (df["Month"] >= today.month))].copy()
     
     # Calculate YTD return
-    df["YTD"] = df["Close"] / df["Year"].map(dec_baseline) - 1
+    df["YTD"] = df[value_column] / df["Year"].map(dec_baseline) - 1
     
     # Remove rows where we couldn't calculate YTD
     df = df.dropna(subset=["YTD"])

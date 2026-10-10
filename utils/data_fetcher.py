@@ -45,13 +45,17 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
             return None
         
         # Resample to monthly - take last trading day of each month
-        monthly_data = data.resample(pd.offsets.MonthEnd()).agg({
+        monthly_aggregations = {
             'Open': 'first',
             'High': 'max',
             'Low': 'min',
             'Close': 'last',
             'Volume': 'sum'
-        })
+        }
+        if 'Adj Close' in data.columns:
+            monthly_aggregations['Adj Close'] = 'last'
+
+        monthly_data = data.resample(pd.offsets.MonthEnd()).agg(monthly_aggregations)
         
         # Reset index to get Date as column
         monthly_data = monthly_data.reset_index()

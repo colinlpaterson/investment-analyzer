@@ -18,7 +18,7 @@ from utils.data_fetcher import (
     validate_ticker,
     get_all_popular_tickers
 )
-from utils.ytd_analysis import calculate_ytd_returns
+from utils.ytd_analysis import calculate_ytd_returns, get_return_label
 from utils.multi_ticker_analysis import (
     determine_comparison_years,
     prepare_comparison_data,
@@ -47,6 +47,20 @@ The chart shows current period performance against the prior year's performance 
 
 # Sidebar for inputs
 st.sidebar.header("Ticker Selection")
+
+return_type = st.sidebar.segmented_control(
+    "Return type",
+    options=["price", "total"],
+    default="price",
+    required=True,
+    format_func=get_return_label,
+    key="comparison_return_type",
+    help=(
+        "Price return excludes distributions. Total return uses Yahoo Finance's "
+        "adjusted close as a proxy for reinvested distributions."
+    ),
+)
+return_label = get_return_label(return_type)
 
 # Determine comparison years for display
 current_year, prior_year, last_month, is_january = determine_comparison_years()
@@ -129,7 +143,7 @@ if len(st.session_state.ticker_list) < 5:
             help="Enter any valid stock or ETF ticker symbol"
         ).upper().strip()
     
-    if st.sidebar.button("➕ Add Ticker", type="secondary", use_container_width=True):
+    if st.sidebar.button("➕ Add Ticker", type="secondary", width="stretch"):
         if new_ticker and new_ticker not in st.session_state.ticker_list:
             if validate_ticker(new_ticker):
                 st.session_state.ticker_list.append(new_ticker)
@@ -145,7 +159,7 @@ else:
 
 # Clear all button
 if len(st.session_state.ticker_list) > 0:
-    if st.sidebar.button("🗑️ Clear All", use_container_width=True):
+    if st.sidebar.button("🗑️ Clear All", width="stretch"):
         st.session_state.ticker_list = []
         st.rerun()
 
@@ -155,17 +169,18 @@ st.sidebar.markdown("---")
 analyze_button = st.sidebar.button(
     "📊 Compare Tickers",
     type="primary",
-    use_container_width=True,
+    width="stretch",
     disabled=len(st.session_state.ticker_list) < 2
 )
 
 # Info section
 with st.sidebar.expander("ℹ️ About This Comparison"):
-    st.markdown("""
+    st.markdown(f"""
     **How It Works:**
     
     - **January**: Compares full prior year vs year before
     - **Other Months**: Compares YTD current year vs YTD prior year (same months)
+    - **Return type**: {return_label}
     
     **Example (March 2026):**
     - Shows Jan-Feb 2026 vs Jan-Feb 2025
@@ -196,7 +211,13 @@ if analyze_button:
                     continue
 
                 # Calculate YTD returns up through compare_year
-                ytd_data = calculate_ytd_returns(data, start_year, compare_year)
+                try:
+                    ytd_data = calculate_ytd_returns(
+                        data, start_year, compare_year, return_type=return_type
+                    )
+                except ValueError:
+                    failed_tickers.append(ticker)
+                    continue
 
                 if len(ytd_data) == 0:
                     failed_tickers.append(ticker)
@@ -207,7 +228,10 @@ if analyze_button:
             
             # Show warnings for failed tickers
             if failed_tickers:
-                st.warning(f"⚠️ Could not load data for: {', '.join(failed_tickers)}")
+                st.warning(
+                    f"⚠️ Could not calculate {return_label.lower()} for: "
+                    f"{', '.join(failed_tickers)}"
+                )
             
             if len(all_ytd_data) < 2:
                 st.error("❌ Need at least 2 tickers with valid data to compare")
@@ -234,10 +258,11 @@ if analyze_button:
                 compare_year,
                 baseline_year,
                 last_month,
-                is_january
+                is_january,
+                return_label
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             
             # Calculate and display summary statistics
             st.subheader("📊 Performance Summary")
@@ -262,7 +287,7 @@ if analyze_button:
             st.dataframe(
                 display_df,
                 hide_index=True,
-                use_container_width=True,
+                width="stretch",
                 height=min(400, (len(display_df) + 1) * 35 + 3)
             )
             #Helper
@@ -311,17 +336,21 @@ if analyze_button:
                 prior_series = data.get('prior')
                 
                 for month in range(1, last_month + 1):
-                    row = {'Ticker': ticker, 'Month': month}
+                    row = {
+                        'Ticker': ticker,
+                        'Return Type': return_label,
+                        'Month': month,
+                    }
                     
                     if current_series is not None and month in current_series.index:
-                        row[f'{compare_year}_YTD'] = current_series.loc[month]
+                        row[f'{compare_year}_YTD_{return_type}_return'] = current_series.loc[month]
                     else:
-                        row[f'{baseline_year}_YTD'] = None
+                        row[f'{compare_year}_YTD_{return_type}_return'] = None
                     
                     if prior_series is not None and month in prior_series.index:
-                        row[f'{baseline_year}_YTD'] = prior_series.loc[month]
+                        row[f'{baseline_year}_YTD_{return_type}_return'] = prior_series.loc[month]
                     else:
-                        row[f'{baseline_year}_YTD'] = None
+                        row[f'{baseline_year}_YTD_{return_type}_return'] = None
                     
                     export_rows.append(row)
             
@@ -331,7 +360,7 @@ if analyze_button:
             st.download_button(
                 label="Download Comparison Data (CSV)",
                 data=csv,
-                file_name=f"ticker_comparison_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"ticker_comparison_{return_type}_return_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
 

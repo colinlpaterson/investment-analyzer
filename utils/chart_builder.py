@@ -28,7 +28,8 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
                             highlight_year: int,
                             last_month_highlight: int,
                             summary_stats: dict,
-                            ticker: str) -> go.Figure:
+                            ticker: str,
+                            return_label: str = "Price return") -> go.Figure:
     """
     Create interactive YTD performance chart using Plotly.
     
@@ -44,6 +45,8 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
         Dictionary of summary statistics
     ticker : str
         Ticker symbol
+    return_label : str
+        Display label for the selected return methodology
         
     Returns
     -------
@@ -127,7 +130,7 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
     # Update layout
     fig.update_layout(
         title=dict(
-            text=f"{ticker} Year-to-Date Price Return by Calendar Year ({summary_stats['actual_start_year']}–{summary_stats['highlight_year']})",
+            text=f"{ticker} Year-to-Date {return_label} by Calendar Year ({summary_stats['actual_start_year']}–{summary_stats['highlight_year']})",
             x=0.5,
             xanchor='center',
             font=dict(size=18, color=TEXT_COLOR)
@@ -149,7 +152,7 @@ def create_ytd_plotly_chart(ytd_by_year: Dict[int, pd.Series],
         ),
         yaxis=dict(
             title=dict(
-                text="Year-to-Date Price Return (%)",
+                text=f"Year-to-Date {return_label} (%)",
                 font=dict(color=TEXT_COLOR, size=12)
             ),
             tickformat='.1f',
@@ -185,7 +188,8 @@ def create_multi_ticker_comparison_chart(
     compare_year: int,
     baseline_year: int,
     last_month_current: int,
-    is_january: bool
+    is_january: bool,
+    return_label: str = "Price return",
 ) -> go.Figure:
     """
     Create multi-ticker comparison chart.
@@ -202,6 +206,8 @@ def create_multi_ticker_comparison_chart(
         Last completed month in current period
     is_january : bool
         Whether we're in January (shows full years only)
+    return_label : str
+        Display label for the selected return methodology
         
     Returns
     -------
@@ -279,9 +285,9 @@ def create_multi_ticker_comparison_chart(
     
     # Build title based on comparison type
     if is_january:
-        title_text = f"Price Return Comparison<br><sub>Full Year {compare_year} vs Full Year {baseline_year}</sub>"
+        title_text = f"{return_label} Comparison<br><sub>Full Year {compare_year} vs Full Year {baseline_year}</sub>"
     else:
-        title_text = f"Year-to-Date Price Return Comparison<br><sub>{compare_year} YTD vs {baseline_year} YTD (through {MONTH_LABELS[last_month_current-1]})</sub>"
+        title_text = f"Year-to-Date {return_label} Comparison<br><sub>{compare_year} YTD vs {baseline_year} YTD (through {MONTH_LABELS[last_month_current-1]})</sub>"
 
     fig.update_layout(
         title=dict(
@@ -307,7 +313,7 @@ def create_multi_ticker_comparison_chart(
         ),
        yaxis=dict(
             title=dict(
-                text="Year-to-Date Price Return (%)",
+                text=f"Year-to-Date {return_label} (%)",
                 font=dict(color=TEXT_COLOR, size=12)
             ),
             tickformat='.1f',

@@ -1,6 +1,6 @@
 """
 Historical YTD Performance Analysis Page
-Analyzes year-to-date price returns across multiple years for a single ticker.
+Analyzes year-to-date price or total returns across multiple years for a single ticker.
 """
 import streamlit as st
 import pandas as pd
@@ -19,6 +19,7 @@ from utils.data_fetcher import (
 )
 from utils.ytd_analysis import (
     calculate_ytd_returns,
+    get_return_label,
     prepare_ytd_series,
     get_summary_statistics
 )
@@ -34,14 +35,26 @@ st.set_page_config(
 # Title and description
 st.title("📈 Historical Year-to-Date Performance")
 st.markdown("""
-Analyze year-to-date (YTD) price returns for any stock or ETF across multiple years.
+Analyze year-to-date (YTD) price or total returns for any stock or ETF across multiple years.
 Compare current year performance against historical trends to identify patterns and outliers.
-
-**Note:** All prices are split-adjusted closing prices, which account for stock splits but not dividends.
 """)
 
 # Sidebar for inputs
 st.sidebar.header("Analysis Parameters")
+
+return_type = st.sidebar.segmented_control(
+    "Return type",
+    options=["price", "total"],
+    default="price",
+    required=True,
+    format_func=get_return_label,
+    key="historical_return_type",
+    help=(
+        "Price return excludes distributions. Total return uses Yahoo Finance's "
+        "adjusted close as a proxy for reinvested distributions."
+    ),
+)
+return_label = get_return_label(return_type)
 
 # Ticker selection
 ticker_input_method = st.sidebar.radio(
@@ -83,18 +96,27 @@ start_year = st.sidebar.number_input(
 )
 
 # Analysis button
-analyze_button = st.sidebar.button("📊 Analyze", type="primary", use_container_width=True)
+analyze_button = st.sidebar.button("📊 Analyze", type="primary", width="stretch")
 
 # Info section
 with st.sidebar.expander("ℹ️ About YTD Calculation"):
-    st.markdown("""
+    if return_type == "price":
+        methodology = (
+            "Uses split-adjusted closing prices and excludes dividends and other distributions."
+        )
+    else:
+        methodology = (
+            "Uses Yahoo Finance adjusted close as a total-return proxy, assuming distributions "
+            "are reinvested. It is not tax-aware and may differ from an investor's realized return."
+        )
+    st.markdown(f"""
     **YTD Return Formula:**
     ```
-    YTD = (Current Month Close / Prior December Close) - 1
+    YTD = (Current Month Value / Prior December Value) - 1
     ```
     
-    - Measures price return only (excludes dividends)
-    - Uses split-adjusted closing prices (accounts for splits)
+    - **Selected methodology:** {return_label}
+    - {methodology}
     - Each year starts from prior December close
     - Current year shows completed months only
     - Historical years shown in grey for comparison
@@ -121,7 +143,13 @@ if analyze_button:
                 st.stop()
             
             # Calculate YTD returns
-            ytd_data = calculate_ytd_returns(data, start_year, current_year)
+            try:
+                ytd_data = calculate_ytd_returns(
+                    data, start_year, current_year, return_type=return_type
+                )
+            except ValueError as exc:
+                st.error(f"❌ {exc}")
+                st.stop()
             
             if len(ytd_data) == 0:
                 st.error(f"❌ Insufficient data to calculate YTD returns for {ticker}")
@@ -146,10 +174,11 @@ if analyze_button:
                 highlight_year,
                 last_month_highlight,
                 summary_stats,
-                ticker
+                ticker,
+                return_label
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
             
             # Display summary statistics
             st.subheader("📊 Summary Statistics")
@@ -160,7 +189,7 @@ if analyze_button:
                 st.metric(
                     "Current/Latest YTD",
                     f"{summary_stats['current_ytd']*100:.1f}%",
-                    help=f"Year-to-date return for {summary_stats['highlight_year']}"
+                    help=f"Year-to-date {return_label.lower()} for {summary_stats['highlight_year']}"
                 )
             
             with col2:
@@ -208,22 +237,29 @@ if analyze_button:
                 
                 **Methodology:**
                 - YTD return measured from prior December month-end to each subsequent month-end
-                - Uses split-adjusted closing prices (accounts for stock splits, not dividends)
-                - Price return only - does not include dividend distributions (total return)
+                - Selected return type: **{return_label}**
+                - {methodology}
                 - {summary_stats['highlight_year']} line ends at last completed month
                 - Average calculated across {summary_stats['n_years']} completed years
                 - Dates label calendar month-end; prices come from the last trading day
-                
-                **Note:** Split-adjusted closing prices account for stock splits but do NOT include reinvested dividends.
-                This analysis shows pure price appreciation/depreciation.
                 """)
             
             # Download data option
             st.subheader("💾 Export Data")
             
             # Prepare data for download
-            export_data = ytd_data[['Date', 'Year', 'Month', 'Close', 'YTD']].copy()
-            export_data['YTD'] = export_data['YTD'] * 100  # Convert to percentage
+            value_column = "Close" if return_type == "price" else "Adj Close"
+            value_label = (
+                "Split-adjusted close"
+                if return_type == "price"
+                else "Dividend-adjusted close"
+            )
+            return_column = f"YTD {return_label} (%)"
+            export_data = ytd_data[['Date', 'Year', 'Month', value_column, 'YTD']].copy()
+            export_data = export_data.rename(
+                columns={value_column: value_label, 'YTD': return_column}
+            )
+            export_data[return_column] = export_data[return_column] * 100
             
             # Resampling labels observations with calendar month-end dates
             # Format as date only (no time component)
@@ -233,9 +269,9 @@ if analyze_button:
             st.download_button(
                 label="Download YTD Data (CSV)",
                 data=csv,
-                file_name=f"{ticker}_ytd_analysis_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"{ticker}_{return_type}_return_ytd_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv",
-                help="Download data with split-adjusted closing prices (calendar month-end labels)"
+                help=f"Download {return_label.lower()} data with calendar month-end labels"
             )
 
 else:
@@ -264,14 +300,12 @@ else:
     - **GLD** - Gold ETF
     - **TLT** - 20+ Year Treasury Bond ETF
     
-    ### About Split-Adjusted Closing Prices
+    ### Return Types
     
-    This analysis uses **split-adjusted closing prices** which:
-    - ✅ Account for stock splits
-    - ❌ Do NOT include dividends
-    - Show pure price return (capital appreciation only)
+    - **Price return** uses split-adjusted closing prices and excludes distributions.
+    - **Total return** uses Yahoo Finance adjusted close as a proxy for reinvested distributions.
     """)
 
 # Footer
 st.markdown("---")
-st.caption("Data provided by Yahoo Finance. Split-adjusted closing prices used (accounts for splits, not dividends). For informational purposes only. Not financial advice.")
+st.caption("Data provided by Yahoo Finance. Select price return or adjusted-close total return. For informational purposes only. Not financial advice.")

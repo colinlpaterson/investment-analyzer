@@ -45,15 +45,15 @@ This application provides powerful tools for analyzing stock and ETF performance
 ### 📊 Data Source
 
 All data is sourced from **Yahoo Finance** using the yfinance library. Data includes:
-- Monthly split-adjusted closing prices
+- Monthly split-adjusted and dividend-adjusted closing prices
 - Historical data back to the early 2000s (varies by ticker)
 - Real-time updates for current year data
 
 ### ⚠️ Important Notes
 
-- **Price Returns Only**: Analysis uses price returns and does NOT include dividends (total return)
+- **Selectable Return Type**: Choose price return or adjusted-close total return
 - **Month-End Data**: All calculations based on month-end closing prices
-- **Adjusted Prices**: Prices are adjusted for stock splits but not dividends
+- **Total Return Assumption**: Total return uses Yahoo Finance adjusted close as a proxy for reinvested distributions
 - **Not Financial Advice**: This tool is for informational and educational purposes only
 
 ### 🔗 Resources

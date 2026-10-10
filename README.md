@@ -5,12 +5,12 @@ A Streamlit web application for analyzing and comparing stock and ETF performanc
 ## Features
 
 ### 📈 Historical YTD Performance
-- View year-to-date (YTD) performance for any stock ticker
+- View price return or adjusted-close total return for any stock ticker
 - Compare current year against historical years
 - Available for any ticker supported by Yahoo Finance
 
 ### 📊 Multi-Ticker Comparison
-- Compare YTD performance across multiple tickers simultaneously
+- Compare price or total-return YTD performance across multiple tickers simultaneously
 - View last full year's performance (dashed lines) alongside current YTD
 - Color-coded visualization for easy comparison
 - Available for any ticker supported by Yahoo Finance
@@ -18,7 +18,7 @@ A Streamlit web application for analyzing and comparing stock and ETF performanc
 ## Installation
 
 ### Prerequisites
-- Python 3.8 or higher
+- Python 3.10 or higher
 - pip package manager
 
 ### Setup
@@ -67,6 +67,9 @@ The app will open in your default browser at `http://localhost:8501`
 ## Data Source
 
 This application uses **yfinance** to fetch real-time and historical stock data from Yahoo Finance.
+Price return uses split-adjusted close and excludes distributions. Total return uses Yahoo
+Finance adjusted close as a proxy for reinvested dividends and other distributions; it is
+not tax-aware and may differ from an investor's realized return.
 
 ## Project Structure
 
@@ -103,7 +106,7 @@ python -m pytest -q
 ```
 
 Tests use synthetic market data and mocked Yahoo Finance downloads, including a
-Streamlit page test. They cover price-only returns, the first requested year's
+Streamlit page test. They cover price and total returns, the first requested year's
 December baseline, completed-month filtering, and matching comparison endpoints.
 GitHub Actions also checks compatibility with pandas 2.0 and current dependencies.
 

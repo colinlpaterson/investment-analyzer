@@ -1,4 +1,4 @@
-"""Offline regressions for price returns and aligned comparison periods."""
+"""Offline regressions for selectable returns and aligned comparison periods."""
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -33,6 +33,7 @@ def test_download_uses_price_close_and_resamples_months(multiindex):
         assert download.call_args.kwargs['auto_adjust'] is False
         assert monthly['Date'].tolist() == list(pd.to_datetime(['2023-12-31', '2024-01-31']))
         assert monthly['Close'].tolist() == [104., 108.]
+        assert monthly['Adj Close'].tolist() == [94., 108.]
         assert monthly.loc[0, ['Open', 'High', 'Low', 'Volume']].tolist() == [100., 106., 99., 30]
         result = calculate_ytd_returns(monthly, 2024, 2024)
         assert result['YTD'].tolist() == pytest.approx([108 / 104 - 1])
@@ -49,6 +50,40 @@ def test_first_requested_year_keeps_prior_december_baseline():
     assert result['Year'].tolist() == [2023, 2023, 2024]
     assert result['YTD'].tolist() == pytest.approx([.1, .2, .1])
     pd.testing.assert_index_equal(prices.columns, pd.Index(['Date', 'Close']))
+
+
+def test_total_return_uses_adjusted_close_and_price_default_is_unchanged():
+    prices = pd.DataFrame({
+        'Date': pd.to_datetime(['2023-12-31', '2024-01-31']),
+        'Close': [100., 100.],
+        'Adj Close': [90., 100.],
+    })
+
+    price_result = calculate_ytd_returns(prices, 2024, 2024)
+    total_result = calculate_ytd_returns(prices, 2024, 2024, return_type='total')
+
+    assert price_result['YTD'].tolist() == pytest.approx([0.])
+    assert total_result['YTD'].tolist() == pytest.approx([100 / 90 - 1])
+
+
+def test_total_return_does_not_fall_back_when_adjusted_close_is_missing():
+    prices = pd.DataFrame({
+        'Date': pd.to_datetime(['2023-12-31', '2024-01-31']),
+        'Close': [100., 110.],
+    })
+
+    with pytest.raises(ValueError, match="Total return requires the 'Adj Close' column"):
+        calculate_ytd_returns(prices, 2024, 2024, return_type='total')
+
+
+def test_unknown_return_type_is_rejected():
+    prices = pd.DataFrame({
+        'Date': pd.to_datetime(['2023-12-31', '2024-01-31']),
+        'Close': [100., 110.],
+    })
+
+    with pytest.raises(ValueError, match='Unsupported return type'):
+        calculate_ytd_returns(prices, 2024, 2024, return_type='income')
 
 
 def test_missing_december_does_not_invent_a_baseline():
@@ -104,3 +139,22 @@ def test_historical_page_fetches_baseline_and_displays_selected_year():
     assert download.call_args.args[1] == '2003-12-01'
     assert app.metric[0].value == '20.0%'
     assert any('2004 - 2004' in element.value for element in app.markdown)
+
+
+def test_historical_page_can_select_total_return():
+    prices = pd.DataFrame({
+        'Date': pd.to_datetime(['2003-12-31', '2004-01-31', '2004-12-31']),
+        'Close': [100., 100., 100.],
+        'Adj Close': [80., 90., 100.],
+    })
+    page = Path(__file__).resolve().parents[1] / 'pages' / '2_📈_Historical_YTD.py'
+    with patch('utils.data_fetcher.validate_ticker', return_value=True), patch(
+        'utils.data_fetcher.load_ticker_data', return_value=prices
+    ):
+        app = AppTest.from_file(str(page)).run()
+        app.segmented_control[0].set_value('total').run()
+        app.sidebar.button[0].click().run()
+
+    assert not app.exception
+    assert app.metric[0].value == '25.0%'
+    assert 'Total return' in app.get('plotly_chart')[0].proto.spec
