@@ -15,6 +15,12 @@ A Streamlit web application for analyzing and comparing stock and ETF performanc
 - Color-coded visualization for easy comparison
 - Available for any ticker supported by Yahoo Finance
 
+### 🔗 Correlation Analysis
+- Compare Pearson correlations across 2–10 stocks and ETFs
+- Choose price or total returns, lookback period, and return frequency
+- View an annotated heatmap and the highest and lowest correlation pairs
+- Export the correlation matrix as CSV
+
 ## Installation
 
 ### Prerequisites
@@ -60,9 +66,15 @@ The app will open in your default browser at `http://localhost:8501`
 
 **Multi-Ticker Comparison:**
 1. Navigate to the "Ticker Comparison" page
-2. Enter multiple tickers separated by commas or use the multi-select widget
+2. Add 2–5 popular or custom ticker symbols
 3. View comparative YTD performance and last year's full performance
 4. Use the color-coded charts to identify relative performance
+
+**Correlation Analysis:**
+1. Navigate to the "Correlation Analysis" page
+2. Select or enter 2–10 ticker symbols
+3. Choose the return type, lookback period, and observation frequency
+4. Calculate and explore the static correlation heatmap
 
 ## Data Source
 
@@ -78,9 +90,11 @@ stock-performance-analyzer/
 ├── app.py                      # Main Streamlit application
 ├── pages/
 │   ├── 1_📈_Historical_YTD.py   # Historical YTD comparison page
-│   └── 2_📊_Ticker_Comparison.py # Multi-ticker comparison page
+│   ├── 2_📊_Ticker_Comparison.py # Multi-ticker comparison page
+│   └── 3_🔗_Correlation_Analysis.py # Static return-correlation heatmap
 ├── utils/
 │   ├── __init__.py
+│   ├── correlation_analysis.py # Return-matrix and correlation calculations
 │   ├── data_fetcher.py         # Data retrieval functions
 │   └── chart_builder.py        # Plotting and visualization functions
 ├── requirements.txt            # Python dependencies
@@ -105,9 +119,9 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Tests use synthetic market data and mocked Yahoo Finance downloads, including a
-Streamlit page test. They cover price and total returns, the first requested year's
-December baseline, completed-month filtering, and matching comparison endpoints.
+Tests use synthetic market data and mocked Yahoo Finance downloads, including
+Streamlit page tests. They cover price and total returns, correlation calculations,
+common-date alignment, completed-period filtering, and matching comparison endpoints.
 GitHub Actions also checks compatibility with pandas 2.0 and current dependencies.
 
 ## Contributing

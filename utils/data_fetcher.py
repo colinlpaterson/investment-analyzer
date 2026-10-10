@@ -67,6 +67,32 @@ def load_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
         return None
 
 
+@st.cache_data(ttl=3600, max_entries=100)
+def load_daily_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFrame]:
+    """Download daily close and adjusted-close data for correlation analysis."""
+    try:
+        data = yf.download(
+            ticker,
+            start=start_date,
+            auto_adjust=False,
+            progress=False,
+        )
+
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.droplevel(1)
+
+        if data.empty or "Close" not in data.columns:
+            return None
+
+        columns = ["Close"]
+        if "Adj Close" in data.columns:
+            columns.append("Adj Close")
+
+        return data[columns].reset_index()
+    except Exception:
+        return None
+
+
 def validate_ticker(ticker: str) -> bool:
     """
     Validate if a ticker symbol exists and has data.

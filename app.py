@@ -30,10 +30,15 @@ This application provides powerful tools for analyzing stock and ETF performance
 - View historical averages and trends
 - Analyze any stock or ETF ticker
 
-**2. Multi-Ticker Comparison** *(Coming Soon)*
+**2. Multi-Ticker Comparison**
 - Compare YTD performance across multiple tickers
 - View current year vs. last year performance
 - Analyze relative strength between different assets
+
+**3. Correlation Analysis**
+- Compare how closely the periodic returns of 2–10 securities move together
+- Choose price or total returns and daily, weekly, or monthly frequency
+- Identify the highest and lowest correlations in the selected group
 
 ### 🚀 Getting Started
 
@@ -45,14 +50,14 @@ This application provides powerful tools for analyzing stock and ETF performance
 ### 📊 Data Source
 
 All data is sourced from **Yahoo Finance** using the yfinance library. Data includes:
-- Monthly split-adjusted and dividend-adjusted closing prices
+- Daily split-adjusted and dividend-adjusted closing prices
 - Historical data back to the early 2000s (varies by ticker)
 - Real-time updates for current year data
 
 ### ⚠️ Important Notes
 
 - **Selectable Return Type**: Choose price return or adjusted-close total return
-- **Month-End Data**: All calculations based on month-end closing prices
+- **Analysis Frequency**: YTD analysis uses month-end data; correlation frequency is selectable
 - **Total Return Assumption**: Total return uses Yahoo Finance adjusted close as a proxy for reinvested distributions
 - **Not Financial Advice**: This tool is for informational and educational purposes only
 
@@ -90,4 +95,4 @@ with st.sidebar:
 
 # Footer
 st.markdown("---")
-st.caption("© 2025 Stock Performance Analyzer | Data provided by Yahoo Finance | For educational purposes only")
+st.caption("© 2026 Stock Performance Analyzer | Data provided by Yahoo Finance | For educational purposes only")

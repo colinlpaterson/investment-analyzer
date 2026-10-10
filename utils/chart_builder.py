@@ -346,3 +346,55 @@ def create_multi_ticker_comparison_chart(
     )
     
     return fig
+
+
+def create_correlation_heatmap(
+    correlation_matrix: pd.DataFrame,
+    return_label: str,
+    frequency_label: str,
+    lookback_label: str,
+) -> go.Figure:
+    """Create an annotated, fixed-scale correlation heatmap."""
+    labels = correlation_matrix.columns.tolist()
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=correlation_matrix.to_numpy(),
+            x=labels,
+            y=labels,
+            zmin=-1,
+            zmax=1,
+            zmid=0,
+            colorscale="RdBu_r",
+            text=correlation_matrix.to_numpy(),
+            texttemplate="%{text:.2f}",
+            hovertemplate=(
+                "<b>%{y} vs %{x}</b><br>Correlation: %{z:.3f}<extra></extra>"
+            ),
+            colorbar=dict(title="Correlation", tickformat=".1f"),
+        )
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=(
+                f"{frequency_label} {return_label.lower()} correlation"
+                f"<br><sub>{lookback_label} lookback</sub>"
+            ),
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18, color=TEXT_COLOR),
+        ),
+        xaxis=dict(side="bottom", tickfont=dict(color=TEXT_COLOR)),
+        yaxis=dict(
+            autorange="reversed",
+            tickfont=dict(color=TEXT_COLOR),
+            scaleanchor="x",
+        ),
+        plot_bgcolor=PLOT_BG,
+        paper_bgcolor=PAPER_BG,
+        height=max(500, 55 * len(labels) + 180),
+        margin=dict(l=80, r=80, t=100, b=80),
+    )
+
+    return fig
