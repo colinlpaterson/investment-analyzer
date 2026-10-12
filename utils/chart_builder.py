@@ -398,3 +398,76 @@ def create_correlation_heatmap(
     )
 
     return fig
+
+
+def create_rolling_correlation_chart(
+    rolling_correlation: pd.Series,
+    ticker_a: str,
+    ticker_b: str,
+    window: int,
+    return_label: str,
+    frequency_label: str,
+    lookback_label: str,
+) -> go.Figure:
+    """Create a fixed-scale rolling-correlation line chart."""
+    average_correlation = float(rolling_correlation.mean())
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=rolling_correlation.index,
+            y=rolling_correlation,
+            mode="lines",
+            name=f"{ticker_a} vs {ticker_b}",
+            line=dict(color=COLOR_CURRENT_YEAR, width=2.5),
+            hovertemplate=(
+                "<b>%{x|%b %d, %Y}</b><br>Correlation: %{y:.3f}<extra></extra>"
+            ),
+        )
+    )
+    fig.add_hline(
+        y=0,
+        line_width=1,
+        line_color=GRID_COLOR,
+    )
+    fig.add_hline(
+        y=average_correlation,
+        line_width=1.5,
+        line_dash="dash",
+        line_color=COLOR_HISTORICAL,
+        annotation_text=f"Average {average_correlation:.2f}",
+        annotation_position="top left",
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=(
+                f"{ticker_a} vs {ticker_b} rolling correlation"
+                f"<br><sub>{window} {frequency_label.lower()} observations · "
+                f"{lookback_label} lookback · {return_label.lower()}</sub>"
+            ),
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18, color=TEXT_COLOR),
+        ),
+        xaxis=dict(
+            title="Date",
+            tickfont=dict(color=TEXT_COLOR),
+            gridcolor=GRID_COLOR,
+        ),
+        yaxis=dict(
+            title="Correlation",
+            range=[-1.05, 1.05],
+            tickformat=".1f",
+            tickfont=dict(color=TEXT_COLOR),
+            gridcolor=GRID_COLOR,
+        ),
+        hovermode="x unified",
+        plot_bgcolor=PLOT_BG,
+        paper_bgcolor=PAPER_BG,
+        height=560,
+        margin=dict(l=80, r=80, t=110, b=80),
+        showlegend=False,
+    )
+
+    return fig

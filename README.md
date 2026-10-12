@@ -19,7 +19,8 @@ A Streamlit web application for analyzing and comparing stock and ETF performanc
 - Compare Pearson correlations across 2–10 stocks and ETFs
 - Choose price or total returns, lookback period, and return frequency
 - View an annotated heatmap and the highest and lowest correlation pairs
-- Export the correlation matrix as CSV
+- Track rolling correlation through time for a selected ticker pair
+- Export the correlation matrix or rolling series as CSV
 
 ## Installation
 
@@ -72,9 +73,10 @@ The app will open in your default browser at `http://localhost:8501`
 
 **Correlation Analysis:**
 1. Navigate to the "Correlation Analysis" page
-2. Select or enter 2–10 ticker symbols
-3. Choose the return type, lookback period, and observation frequency
-4. Calculate and explore the static correlation heatmap
+2. Choose the static matrix or rolling-pair view
+3. Select or enter the ticker symbols to analyze
+4. Choose the return type, lookback period, and observation frequency
+5. Calculate and explore the heatmap or rolling-correlation chart
 
 ## Data Source
 
@@ -91,7 +93,7 @@ stock-performance-analyzer/
 ├── pages/
 │   ├── 1_📈_Historical_YTD.py   # Historical YTD comparison page
 │   ├── 2_📊_Ticker_Comparison.py # Multi-ticker comparison page
-│   └── 3_🔗_Correlation_Analysis.py # Static return-correlation heatmap
+│   └── 3_🔗_Correlation_Analysis.py # Static and rolling correlation analysis
 ├── utils/
 │   ├── __init__.py
 │   ├── correlation_analysis.py # Return-matrix and correlation calculations
@@ -120,7 +122,7 @@ python -m pytest -q
 ```
 
 Tests use synthetic market data and mocked Yahoo Finance downloads, including
-Streamlit page tests. They cover price and total returns, correlation calculations,
+Streamlit page tests. They cover price and total returns, static and rolling correlation,
 common-date alignment, completed-period filtering, and matching comparison endpoints.
 GitHub Actions also checks compatibility with pandas 2.0 and current dependencies.
 

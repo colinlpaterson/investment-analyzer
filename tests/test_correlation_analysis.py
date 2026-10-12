@@ -1,4 +1,4 @@
-"""Offline regressions for static correlation analysis."""
+"""Offline regressions for static and rolling correlation analysis."""
 
 from pathlib import Path
 from unittest.mock import patch
@@ -10,7 +10,9 @@ from streamlit.testing.v1 import AppTest
 
 from utils.correlation_analysis import (
     calculate_correlation_matrix,
+    calculate_rolling_correlation,
     find_correlation_extremes,
+    get_rolling_window_options,
     normalize_tickers,
     prepare_return_matrix,
 )
@@ -117,6 +119,47 @@ def test_correlation_rejects_small_or_constant_samples():
         calculate_correlation_matrix(constant, min_observations=3)
 
 
+def test_rolling_correlation_matches_pandas_and_preserves_dates():
+    dates = pd.date_range("2024-01-02", periods=6, freq="B")
+    returns = pd.DataFrame(
+        {
+            "A": [.01, -.02, .03, .01, -.01, .02],
+            "B": [.02, -.01, .04, -.02, .01, .03],
+        },
+        index=dates,
+    )
+
+    result = calculate_rolling_correlation(returns, window=3)
+    expected = returns["A"].rolling(3).corr(returns["B"]).dropna()
+    expected.index.name = "Date"
+
+    pd.testing.assert_series_equal(result, expected.rename("Correlation"))
+    assert result.index.name == "Date"
+
+
+def test_rolling_correlation_validates_pair_window_and_sample_size():
+    returns = pd.DataFrame({"A": [.1, .2, .3], "B": [.2, .1, .4]})
+
+    with pytest.raises(ValueError, match="exactly two"):
+        calculate_rolling_correlation(returns.assign(C=[.3, .2, .1]), window=2)
+    with pytest.raises(ValueError, match="at least 2"):
+        calculate_rolling_correlation(returns, window=1)
+    with pytest.raises(ValueError, match="requires at least 4"):
+        calculate_rolling_correlation(returns, window=4)
+
+
+@pytest.mark.parametrize(
+    ("frequency", "expected"),
+    [
+        ("daily", (20, 60, 120, 252)),
+        ("weekly", (13, 26, 52)),
+        ("monthly", (6, 12, 24, 36)),
+    ],
+)
+def test_rolling_window_options_match_frequency(frequency, expected):
+    assert get_rolling_window_options(frequency) == expected
+
+
 @pytest.mark.parametrize("multiindex", [False, True])
 def test_daily_loader_preserves_close_and_adjusted_close(multiindex):
     daily = pd.DataFrame(
@@ -168,3 +211,37 @@ def test_correlation_page_renders_total_return_heatmap():
         "Common observations",
     ]
     assert "total return correlation" in app.get("plotly_chart")[0].proto.spec
+
+
+def test_correlation_page_renders_rolling_pair_analysis():
+    dates = pd.date_range("2025-01-02", periods=320, freq="B")
+    base_returns = np.resize(
+        np.array([.01, -.006, .004, .012, -.003, .002]),
+        len(dates) - 1,
+    )
+    factors = {"SPY": 1.0, "QQQ": 1.3}
+
+    def mocked_download(ticker, _start_date):
+        adjusted = prices_from_returns(base_returns * factors[ticker])
+        return price_frame(dates, adjusted, adjusted)
+
+    page = Path(__file__).resolve().parents[1] / "pages" / "3_🔗_Correlation_Analysis.py"
+    with patch(
+        "utils.data_fetcher.load_daily_ticker_data",
+        side_effect=mocked_download,
+    ):
+        app = AppTest.from_file(str(page)).run()
+        app.segmented_control[0].set_value("rolling").run()
+        app.button[0].click().run()
+
+    assert not app.exception
+    assert app.success
+    assert [metric.label for metric in app.metric] == [
+        "Latest",
+        "Average",
+        "Minimum",
+        "Maximum",
+    ]
+    chart_spec = app.get("plotly_chart")[0].proto.spec
+    assert "rolling correlation" in chart_spec
+    assert "SPY vs QQQ" in chart_spec

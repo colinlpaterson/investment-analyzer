@@ -22,6 +22,18 @@ MIN_OBSERVATIONS = {
     "monthly": 6,
 }
 
+ROLLING_WINDOW_OPTIONS = {
+    "daily": (20, 60, 120, 252),
+    "weekly": (13, 26, 52),
+    "monthly": (6, 12, 24, 36),
+}
+
+ROLLING_WINDOW_DEFAULTS = {
+    "daily": 60,
+    "weekly": 26,
+    "monthly": 12,
+}
+
 
 def normalize_tickers(tickers: list[str]) -> list[str]:
     """Normalize, de-duplicate, and preserve the order of ticker symbols."""
@@ -41,6 +53,14 @@ def get_frequency_label(frequency: ReturnFrequency) -> str:
     """Return the display label for a supported observation frequency."""
     try:
         return FREQUENCY_LABELS[frequency]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported return frequency: {frequency}") from exc
+
+
+def get_rolling_window_options(frequency: ReturnFrequency) -> tuple[int, ...]:
+    """Return the supported rolling-window sizes for a return frequency."""
+    try:
+        return ROLLING_WINDOW_OPTIONS[frequency]
     except KeyError as exc:
         raise ValueError(f"Unsupported return frequency: {frequency}") from exc
 
@@ -120,6 +140,43 @@ def calculate_correlation_matrix(
         )
 
     return returns.corr(method="pearson")
+
+
+def calculate_rolling_correlation(
+    returns: pd.DataFrame,
+    window: int,
+) -> pd.Series:
+    """Calculate rolling Pearson correlation for exactly two return series."""
+    if returns.shape[1] != 2:
+        raise ValueError("Rolling correlation requires exactly two return series")
+    if not isinstance(window, int) or isinstance(window, bool) or window < 2:
+        raise ValueError("Rolling window must be an integer of at least 2 observations")
+
+    aligned_returns = returns.dropna(how="any")
+    if len(aligned_returns) < window:
+        raise ValueError(
+            f"Only {len(aligned_returns)} common return observations are available; "
+            f"the selected rolling window requires at least {window}"
+        )
+
+    first_ticker, second_ticker = aligned_returns.columns
+    rolling_correlation = (
+        aligned_returns[first_ticker]
+        .rolling(window=window, min_periods=window)
+        .corr(aligned_returns[second_ticker])
+        .dropna()
+        .clip(-1.0, 1.0)
+        .rename("Correlation")
+    )
+    rolling_correlation.index.name = "Date"
+
+    if rolling_correlation.empty:
+        raise ValueError(
+            "Rolling correlation is undefined because one or both return series "
+            "are constant within every complete window"
+        )
+
+    return rolling_correlation
 
 
 def find_correlation_extremes(

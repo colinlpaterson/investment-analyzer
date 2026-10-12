@@ -39,6 +39,7 @@ This application provides powerful tools for analyzing stock and ETF performance
 - Compare how closely the periodic returns of 2–10 securities move together
 - Choose price or total returns and daily, weekly, or monthly frequency
 - Identify the highest and lowest correlations in the selected group
+- Track how correlation between a selected pair changes through time
 
 ### 🚀 Getting Started
 
