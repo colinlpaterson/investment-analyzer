@@ -63,6 +63,13 @@ def render_portfolio_builder(page_key: str) -> PortfolioData | None:
                 help="A constant effective annual assumption for Sharpe ratios. 0% is a placeholder, not a live rate.",
                 on_change=_inputs_changed, key=f"{prefix}_risk_free",
             )
+            mar = st.number_input(
+                "Annual minimum acceptable return (MAR) (%)", min_value=-99.0, max_value=100.0,
+                value=saved.minimum_acceptable_return * 100 if saved else 0.0, step=0.25,
+                help="Your annual return target for the Sortino ratio, converted to a constant daily target. "
+                     "0% measures shortfalls below zero return. Independent of the Sharpe risk-free assumption.",
+                on_change=_inputs_changed, key=f"{prefix}_mar",
+            )
             st.caption(
                 "Total returns use adjusted close as a proxy for reinvested distributions. "
                 "Taxes, trading costs, and currency conversion are not included. "
@@ -70,7 +77,7 @@ def render_portfolio_builder(page_key: str) -> PortfolioData | None:
             )
         # Local checks share the save-time validator and never request market data.
         try:
-            portfolio_from_rows(edited.to_dict("records"), start, end, rebalance, risk_free, benchmark)
+            portfolio_from_rows(edited.to_dict("records"), start, end, rebalance, risk_free, benchmark, minimum_acceptable_return_percent=mar)
         except (ValueError, TypeError) as exc:
             st.warning(str(exc))
         normalize_help = (
@@ -86,7 +93,7 @@ def render_portfolio_builder(page_key: str) -> PortfolioData | None:
     # Also compare rendered values: programmatic/editor changes may bypass callbacks.
     if saved is not None and st.session_state["portfolio_data"] is not None:
         try:
-            draft = portfolio_from_rows(edited.to_dict("records"), start, end, rebalance, risk_free, benchmark)
+            draft = portfolio_from_rows(edited.to_dict("records"), start, end, rebalance, risk_free, benchmark, minimum_acceptable_return_percent=mar)
             matches = (replace(draft, holdings=saved.holdings) == saved
                        and len(draft.holdings) == len(saved.holdings)
                        and all(a.ticker == b.ticker and isclose(a.weight, b.weight, rel_tol=0, abs_tol=1e-12)
@@ -98,7 +105,7 @@ def render_portfolio_builder(page_key: str) -> PortfolioData | None:
     if submit or normalize:
         try:
             definition = portfolio_from_rows(
-                edited.to_dict("records"), start, end, rebalance, risk_free, benchmark, normalize,
+                edited.to_dict("records"), start, end, rebalance, risk_free, benchmark, normalize, minimum_acceptable_return_percent=mar,
             )
         except (ValueError, TypeError) as exc:
             invalidate_portfolio_inputs(st.session_state)
@@ -133,6 +140,7 @@ def render_portfolio_builder(page_key: str) -> PortfolioData | None:
         f"Common price period: {data.prices.index[0]:%m/%d/%Y} to {data.prices.index[-1]:%m/%d/%Y}. "
         f"Rebalancing: {data.definition.rebalancing}. "
         f"Risk-free assumption: {data.definition.risk_free_rate:.2%} annually. "
+        f"MAR: {data.definition.minimum_acceptable_return:.2%} annually. "
         f"Benchmark: {data.definition.benchmark or 'None'}."
     )
     for notice in data.notices:

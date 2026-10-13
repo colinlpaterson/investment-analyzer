@@ -16,7 +16,7 @@ from utils.portfolio_data import PortfolioData
 
 TRADING_DAYS = 252
 ZERO_TOLERANCE = 1e-12
-METRIC_COLUMNS = ["Total return", "CAGR", "Volatility", "Sharpe ratio", "Max drawdown"]
+METRIC_COLUMNS = ["Total return", "CAGR", "Volatility", "Sharpe ratio", "Sortino ratio", "Max drawdown"]
 
 
 @dataclass
@@ -108,7 +108,7 @@ recorded on a rebalance date are post-trade weights; total wealth is unchanged.
     )
 
 
-def performance_metrics(values: pd.Series, risk_free_rate: float = 0.0) -> dict[str, float]:
+def performance_metrics(values: pd.Series, risk_free_rate: float = 0.0, minimum_acceptable_return: float = 0.0) -> dict[str, float]:
     """CAGR uses elapsed calendar years; volatility and Sharpe use 252 daily periods.
 
 Sharpe uses arithmetic mean excess daily return, not CAGR. Annual risk-free
@@ -118,6 +118,8 @@ Undefined sample statistics are NaN, never infinity or a misleading zero.
     _validate_prices(values.to_frame())
     if not np.isfinite(risk_free_rate) or not -1 < risk_free_rate <= 1:
         raise ValueError("Risk-free rate must be greater than -100% and at most 100%.")
+    if not np.isfinite(minimum_acceptable_return) or not -1 < minimum_acceptable_return <= 1:
+        raise ValueError("Annual MAR must be greater than -100% and at most 100%.")
     returns = values.pct_change(fill_method=None).iloc[1:]
     years = (values.index[-1] - values.index[0]).total_seconds() / (365.25 * 24 * 60 * 60)
     total_return = values.iloc[-1] / values.iloc[0] - 1
@@ -132,8 +134,15 @@ Undefined sample statistics are NaN, never infinity or a misleading zero.
         (returns.mean() - daily_rf) / daily_std * np.sqrt(TRADING_DAYS)
         if np.isfinite(daily_std) and daily_std > ZERO_TOLERANCE else np.nan
     )
+    daily_mar = np.expm1(np.log1p(minimum_acceptable_return) / TRADING_DAYS)
+    # Include every observation: returns meeting the target contribute zero shortfall.
+    downside = np.sqrt(np.mean(np.minimum(returns - daily_mar, 0.0) ** 2))
+    sortino = (
+        (returns.mean() - daily_mar) / downside * np.sqrt(TRADING_DAYS)
+        if len(returns) >= 2 and downside > ZERO_TOLERANCE else np.nan
+    )
     return dict(zip(METRIC_COLUMNS, [
-        float(total_return), float(cagr), float(volatility), float(sharpe),
+        float(total_return), float(cagr), float(volatility), float(sharpe), float(sortino),
         float((values / values.cummax() - 1).min()),
     ]))
 
@@ -181,13 +190,13 @@ def analyze_portfolio(data: PortfolioData) -> HistoricalAnalysis:
         _validate_prices(benchmark.to_frame())
         growth[f"Benchmark ({definition.benchmark})"] = benchmark / benchmark.iloc[0] * backtest.values.iloc[0]
     metrics = pd.DataFrame({
-        name: performance_metrics(growth[name], definition.risk_free_rate) for name in growth
+        name: performance_metrics(growth[name], definition.risk_free_rate, definition.minimum_acceptable_return) for name in growth
     }).T
     # Derive returns from these prices rather than trusting a separately mutable matrix.
     returns = data.prices.pct_change(fill_method=None).iloc[1:]
     risk, target_volatility = risk_decomposition(returns, weights)
     holdings = pd.DataFrame({
-        ticker: performance_metrics(data.prices[ticker], definition.risk_free_rate)
+        ticker: performance_metrics(data.prices[ticker], definition.risk_free_rate, definition.minimum_acceptable_return)
         for ticker in data.prices
     }).T
     holdings = risk.join(holdings)

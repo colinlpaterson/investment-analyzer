@@ -21,7 +21,7 @@ def _display_table(frame):
     displayed = frame.copy()
     columns = {}
     for column in frame:
-        if column == "Sharpe ratio":
+        if column in ("Sharpe ratio", "Sortino ratio"):
             columns[column] = st.column_config.NumberColumn(format="%.2f", help=METRIC_HELP.get(column))
         else:
             displayed[column] *= 100
@@ -58,11 +58,19 @@ def render_historical_analysis(data: PortfolioData) -> None:
                     "This is a user-set assumption, not a live interest rate. "
                     "The ratio is undefined when volatility is zero."
                 )
-            st.metric(label, _formatted(portfolio_metrics[label], label != "Sharpe ratio"),
+            elif label == "Sortino ratio":
+                help_text += (
+                    f" Saved MAR: {data.definition.minimum_acceptable_return:.2%} annually, "
+                    "converted to a daily target as (1 + annual MAR)^(1/252) − 1. "
+                    "Mean daily return above the target / daily downside deviation × √252. "
+                    "Downside deviation is the square root of mean squared shortfalls across all days; "
+                    "days meeting the target contribute zero."
+                )
+            st.metric(label, _formatted(portfolio_metrics[label], label not in ("Sharpe ratio", "Sortino ratio")),
                       border=True, help=help_text)
-    st.caption("CAGR is annualized compound growth. Volatility and Sharpe use daily returns and 252 trading days per year.")
+    st.caption("CAGR is annualized compound growth. Volatility, Sharpe, and Sortino use daily returns and 252 trading days per year.")
     if len(data.returns) < 2:
-        st.warning("At least two daily returns are needed for volatility, Sharpe, and risk decomposition. Extend the date range.")
+        st.warning("At least two daily returns are needed for volatility, Sharpe, Sortino, and risk decomposition. Extend the date range.")
     elif (data.prices.index[-1] - data.prices.index[0]).days < 365:
         st.warning("This backtest covers less than a year. Annualized figures can be extreme and are sensitive to the short sample.")
     st.subheader(f"Growth of 10,000 ({data.currency})")
@@ -107,6 +115,11 @@ def render_historical_analysis(data: PortfolioData) -> None:
             "- **Sharpe ratio:** mean daily excess return / sample daily standard deviation × √252. "
             "The constant daily risk-free rate is (1 + annual rate)^(1/252) − 1. "
             "Zero volatility gives an undefined Sharpe ratio.\n"
+            "- **Sortino ratio:** mean daily return above the daily MAR / daily downside deviation × √252. "
+            "Daily MAR = (1 + annual MAR)^(1/252) − 1. Downside deviation is the square root of "
+            "the average squared shortfall below daily MAR across all return observations, with zero "
+            "shortfall on days meeting the target. Zero downside deviation or fewer than two returns "
+            "gives an undefined Sortino ratio. MAR is independent of the Sharpe risk-free assumption.\n"
             "- **Maximum drawdown:** the worst decline from a prior peak, including the initial investment.\n"
             "- **Risk contribution:** wᵢ(Σw)ᵢ / (wᵀΣw), using annualized sample covariance Σ. "
             "Risk in this analysis is defined by volatility (variation in returns), not capital loss. "

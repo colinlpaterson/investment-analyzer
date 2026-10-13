@@ -38,11 +38,12 @@ def prepare(config=None, frames=None, currencies=None):
 
 
 def test_definition_normalizes_symbols_and_uses_fractional_units():
-    config = definition(benchmark=" spy ", risk_free_rate_percent=4.25)
+    config = definition(benchmark=" spy ", risk_free_rate_percent=4.25, minimum_acceptable_return_percent=5)
     assert config.tickers == ("A", "B")
     assert config.holdings[0].weight == .6
     assert config.benchmark == "SPY"
     assert config.risk_free_rate == .0425
+    assert config.minimum_acceptable_return == .05
 
 
 @pytest.mark.parametrize("rows, message", [
@@ -74,6 +75,9 @@ def test_normalization_is_explicit_and_keeps_zero_weight_candidates():
 @pytest.mark.parametrize("kwargs", [
     {"rebalancing": "Sometimes"}, {"risk_free_rate_percent": np.nan},
     {"risk_free_rate_percent": -100},
+    {"minimum_acceptable_return_percent": np.nan},
+    {"minimum_acceptable_return_percent": -100},
+    {"minimum_acceptable_return_percent": 101},
 ])
 def test_invalid_assumptions_are_rejected(kwargs):
     with pytest.raises(ValueError):

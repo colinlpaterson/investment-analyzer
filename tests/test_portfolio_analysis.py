@@ -158,11 +158,16 @@ def test_page_renders_metrics_charts_and_invalid_submission_hides_old_results():
         app = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "app.py")).run()
         app.switch_page("pages/4_🖩_Portfolio_Analysis.py").run()
         app.text_input[0].set_value("SPY")
+        next(w for w in app.number_input if "MAR" in w.label).set_value(5.0)
         app.button[0].click().run()
         assert not app.exception
         assert [metric.label for metric in app.metric] == [
-            "Total return", "CAGR", "Volatility", "Sharpe ratio", "Max drawdown", "Volatility at target weights",
+            "Total return", "CAGR", "Volatility", "Sharpe ratio", "Sortino ratio", "Max drawdown", "Volatility at target weights",
         ]
+        assert app.session_state["portfolio_definition"].minimum_acceptable_return == .05
+        sortino = next(m for m in app.metric if m.label == "Sortino ratio")
+        assert "5.00%" in sortino.help
+        assert "%" not in sortino.value
         assert len(app.get("plotly_chart")) == 3
         assert "historical" in app.session_state["portfolio_results"]
         # Invalid edits must not leave old analysis displayed beneath the error.
@@ -171,3 +176,27 @@ def test_page_renders_metrics_charts_and_invalid_submission_hides_old_results():
         app.button[0].click().run()
         assert not app.exception
         assert app.error and not app.metric and not app.get("plotly_chart")
+
+
+def test_sortino_uses_all_days_and_effective_annual_mar():
+    # Two shortfalls and one zero contribution; denominator uses all three days.
+    daily_target = .001
+    annual_target = (1 + daily_target) ** 252 - 1
+    values = pd.Series([100., 102., 100.98, 100.98], index=pd.date_range("2024-01-01", periods=4))
+    expected = ((.02 - .01 + 0) / 3 - daily_target) / np.sqrt((.011**2 + .001**2) / 3) * np.sqrt(252)
+    actual = performance_metrics(values, minimum_acceptable_return=annual_target)
+    assert actual["Sortino ratio"] == pytest.approx(expected)
+    assert performance_metrics(values, .05, annual_target)["Sortino ratio"] == actual["Sortino ratio"]
+
+
+@pytest.mark.parametrize("values", [[100, 110, 120], [100, 100, 100], [100, 90]])
+def test_sortino_undefined_without_downside_or_enough_observations(values):
+    series = pd.Series(values, index=pd.date_range("2024-01-01", periods=len(values)))
+    assert np.isnan(performance_metrics(series)["Sortino ratio"])
+
+
+@pytest.mark.parametrize("mar", [np.nan, np.inf, -1, 1.01])
+def test_metrics_reject_invalid_mar(mar):
+    series = pd.Series([100, 90, 95], index=pd.date_range("2024-01-01", periods=3))
+    with pytest.raises(ValueError, match="MAR"):
+        performance_metrics(series, minimum_acceptable_return=mar)

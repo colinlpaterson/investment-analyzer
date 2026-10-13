@@ -26,6 +26,7 @@ class PortfolioDefinition:
     rebalancing: str = "Monthly"
     risk_free_rate: float = 0.0
     benchmark: str | None = None
+    minimum_acceptable_return: float = 0.0
 
     def __post_init__(self):
         if not self.holdings:
@@ -47,6 +48,8 @@ class PortfolioDefinition:
             raise ValueError("Choose a supported rebalancing frequency.")
         if not math.isfinite(self.risk_free_rate) or not -1 < self.risk_free_rate <= 1:
             raise ValueError("Annual risk-free rate must be greater than -100% and at most 100%.")
+        if not math.isfinite(self.minimum_acceptable_return) or not -1 < self.minimum_acceptable_return <= 1:
+            raise ValueError("Annual MAR must be greater than -100% and at most 100%.")
         if self.benchmark is not None and (
             not self.benchmark or self.benchmark != self.benchmark.strip().upper()
         ):
@@ -70,6 +73,7 @@ def portfolio_from_rows(
     risk_free_rate_percent: float = 0.0,
     benchmark: str = "",
     normalize: bool = False,
+    minimum_acceptable_return_percent: float = 0.0,
 ) -> PortfolioDefinition:
     """Validate editor rows; never silently drop or merge a holding."""
     holdings = []
@@ -93,4 +97,5 @@ def portfolio_from_rows(
     return PortfolioDefinition(
         tuple(holdings), start_date, end_date, rebalancing,
         float(risk_free_rate_percent) / 100, benchmark.strip().upper() or None,
+        float(minimum_acceptable_return_percent) / 100,
     )

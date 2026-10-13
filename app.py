@@ -20,20 +20,20 @@ st.markdown("---")
 st.markdown("""
 ### Welcome to the Stock Performance Analyzer!
 
-This application provides powerful tools for analyzing stock and ETF performance using year-to-date (YTD) returns.
+Powerful tools for exploring and analyzing stocks, ETFs, and investment portfolios—from historical performance and correlations to portfolio optimization and simulation.
 
 #### 📈 Available Analysis Tools
 
-**1. Historical YTD Analysis**
+**1. Multi-Ticker Comparison**
+- Compare YTD performance across multiple tickers
+- View current year vs. last year performance
+- Analyze relative strength between different assets
+
+**2. Historical YTD Analysis**
 - Compare current year performance against multiple historical years
 - Identify best and worst performing years
 - View historical averages and trends
 - Analyze any stock or ETF ticker
-
-**2. Multi-Ticker Comparison**
-- Compare YTD performance across multiple tickers
-- View current year vs. last year performance
-- Analyze relative strength between different assets
 
 **3. Correlation Analysis**
 - Compare how closely the periodic returns of 2–10 securities move together

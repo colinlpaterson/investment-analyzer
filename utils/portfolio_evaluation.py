@@ -38,6 +38,6 @@ def evaluate_holdout(data: PortfolioData, caps: pd.Series, training_share: float
         if benchmark.isna().any() or (benchmark <= 0).any():
             raise ValueError("Benchmark must cover the held-out price dates.")
         growth[f"Benchmark ({data.definition.benchmark})"] = 10_000 * benchmark / benchmark.iloc[0]
-    metrics = pd.DataFrame({name: performance_metrics(values, data.definition.risk_free_rate)
+    metrics = pd.DataFrame({name: performance_metrics(values, data.definition.risk_free_rate, data.definition.minimum_acceptable_return)
                             for name, values in growth.items()}).T
     return HeldOutEvaluation(estimates, solution, growth, metrics, len(returns) - count)

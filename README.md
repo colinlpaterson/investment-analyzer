@@ -1,18 +1,18 @@
 # Stock Performance Analyzer
 
-A Streamlit web application for analyzing and comparing stock and ETF performance with interactive visualizations.
+Powerful tools for exploring and analyzing stocks, ETFs, and investment portfolios—from historical performance and correlations to portfolio optimization and simulation.
 
 ## Features
-
-### 📈 Historical YTD Performance
-- View price return or adjusted-close total return for any stock ticker
-- Compare current year against historical years
-- Available for any ticker supported by Yahoo Finance
 
 ### 📊 Multi-Ticker Comparison
 - Compare price or total-return YTD performance across multiple tickers simultaneously
 - View last full year's performance (dashed lines) alongside current YTD
 - Color-coded visualization for easy comparison
+- Available for any ticker supported by Yahoo Finance
+
+### 📈 Historical YTD Performance
+- View price return or adjusted-close total return for any stock ticker
+- Compare current year against historical years
 - Available for any ticker supported by Yahoo Finance
 
 ### 🔗 Correlation Analysis
@@ -25,12 +25,12 @@ A Streamlit web application for analyzing and comparing stock and ETF performanc
 ### 🖩 Portfolio analysis & optimization (stages 1–5)
 - Build a long-only, fully invested portfolio with an editable ticker/weight table
 - Validate weights or explicitly normalize them to 100%
-- Save dates, rebalancing frequency, an optional benchmark, and an annual risk-free assumption
+- Save dates, rebalancing frequency, an optional benchmark, an annual risk-free assumption, and an annual minimum acceptable return (MAR)
 - Share the saved portfolio between the Portfolio Analysis and Portfolio Simulation pages
 - Check adjusted-close availability, quote currencies, and the common historical period
 - View per-ticker coverage and explanations when the requested history is shortened
 - Backtest monthly, quarterly, or annual rebalancing, or buy and hold
-- View total return, CAGR, annualized volatility, Sharpe ratio, and maximum drawdown
+- View total return, CAGR, annualized volatility, Sharpe ratio, Sortino ratio, and maximum drawdown
 - Compare growth of 10,000 and drawdowns against an optional benchmark
 - Review standalone holding metrics, ending weights, and target-weight risk contributions
 - Set a maximum holding weight and optional tighter per-ticker caps
@@ -84,16 +84,16 @@ The app will open in your default browser at `http://localhost:8501`
 
 ### Using the App
 
-**Historical YTD Analysis:**
-1. Navigate to the "Historical YTD" page
-2. Enter a stock ticker (e.g., SPY, AAPL, MSFT)
-3. Select a start year (e.g., 2004)
-
 **Multi-Ticker Comparison:**
 1. Navigate to the "Ticker Comparison" page
 2. Add 2–5 popular or custom ticker symbols
 3. View comparative YTD performance and last year's full performance
 4. Use the color-coded charts to identify relative performance
+
+**Historical YTD Analysis:**
+1. Navigate to the "Historical YTD" page
+2. Enter a stock ticker (e.g., SPY, AAPL, MSFT)
+3. Select a start year (e.g., 2004)
 
 **Correlation Analysis:**
 1. Navigate to the "Correlation Analysis" page
@@ -106,7 +106,9 @@ The app will open in your default browser at `http://localhost:8501`
 1. Open Portfolio Analysis or Portfolio Simulation.
 2. Edit the ticker and weight table; add or delete rows as needed.
 3. Set the historical dates and rebalancing schedule. Optional assumptions include
-   a benchmark ticker and a constant annual risk-free rate (default 0%, not a live rate).
+   a benchmark ticker, a constant annual risk-free rate for Sharpe (default 0%, not a live rate),
+   and an annual minimum acceptable return (MAR) for Sortino (default 0%).
+   MAR is independent of the risk-free rate and is saved with the portfolio and included in exports.
 4. Click **Save and check data**, or **Normalize and save** to proportionally rescale
    the weights before saving and checking data.
 5. Review the saved allocation, common date range, and data coverage. Both pages
@@ -132,7 +134,7 @@ every portfolio date and cannot silently shorten the portfolio's history.
 
 On Portfolio Analysis, select **Analyze** or **Optimize** below the saved portfolio.
 On Portfolio Simulation, choose the allocation and simulation settings. Data readiness requires at least two
-common price observations; volatility, Sharpe, and covariance require at least two
+common price observations; volatility, Sharpe, Sortino, and covariance require at least two
 daily returns. Short histories are flagged and should be interpreted cautiously.
 Saving or reloading clears dependent data and results before loading new inputs.
 Taxes, trading costs, and currency conversion are not modeled.
@@ -153,6 +155,12 @@ Taxes, trading costs, and currency conversion are not modeled.
   Convert the effective annual risk-free assumption to a constant daily rate with
   `(1 + annual rate) ** (1/252) - 1`. CAGR is not used in the Sharpe numerator.
   This conventional annualization does not adjust for serial correlation.
+- Sortino uses mean daily return above the daily MAR / daily downside deviation × √252.
+  Convert annual MAR to a daily target with `(1 + annual MAR) ** (1/252) - 1`.
+  Downside deviation is the square root of mean squared shortfalls across all daily
+  returns; days meeting the target contribute zero. The metric help explains the
+  definition and displays the saved MAR. Zero downside deviation or fewer than two
+  returns produces N/A.
 - Drawdown is value / running peak − 1, including the initial value in the peak
   series. Maximum drawdown is the most negative value.
 - Standalone holding and benchmark metrics use the same common dates. The benchmark

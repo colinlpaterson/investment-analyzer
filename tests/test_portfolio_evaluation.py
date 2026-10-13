@@ -96,13 +96,16 @@ def test_estimation_sensitivity_changes_weights_and_respects_same_caps():
 
 def test_csv_preserves_units_dates_context_and_undefined_values():
     data = dataset()
-    frame = pd.DataFrame({"Total return": [.125, np.nan], "Sharpe ratio": [1.5, np.nan],
+    frame = pd.DataFrame({"Total return": [.125, np.nan], "Sharpe ratio": [1.5, np.nan], "Sortino ratio": [2.25, np.nan],
                           "Volatility contribution": [.03, -.01]}, index=data.prices.index[:2])
     raw = csv_bytes(metric_table(frame), dict(portfolio_metadata(data), Seed=42)).decode()
     parsed = pd.read_csv(StringIO(raw), index_col=0)
     assert parsed.index[0] == "01/02/2024"
     assert parsed["Total return (%)"].iloc[0] == 12.5
     assert parsed["Sharpe ratio"].iloc[0] == 1.5
+    assert parsed["Sortino ratio"].iloc[0] == 2.25
+    assert pd.isna(parsed["Sortino ratio"].iloc[1])
+    assert parsed["Context: Annual MAR (%)"].iloc[0] == 0
     assert parsed["Volatility contribution (pp)"].iloc[0] == 3
     assert pd.isna(parsed["Total return (%)"].iloc[1])
     assert parsed["Context: Currency"].iloc[0] == "USD"

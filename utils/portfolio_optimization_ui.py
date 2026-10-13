@@ -209,7 +209,7 @@ def render_optimization(data: PortfolioData) -> None:
             if evaluation.solution.max_sharpe_reason:
                 st.warning("Training-period maximum Sharpe unavailable: " + evaluation.solution.max_sharpe_reason)
             st.dataframe(metric_table(evaluation.metrics), column_config={
-                name if name == "Sharpe ratio" else name + " (%)": st.column_config.NumberColumn(
+                name if name in ("Sharpe ratio", "Sortino ratio") else name + " (%)": st.column_config.NumberColumn(
                     format="%.2f", help=METRIC_HELP[name]) for name in evaluation.metrics})
             st.plotly_chart(history_chart(growth, f"Held-out value ({data.currency})"), key="portfolio_holdout_chart")
             st.caption("Training allocations (%) — these may differ from the full-history allocations available for simulation.")
