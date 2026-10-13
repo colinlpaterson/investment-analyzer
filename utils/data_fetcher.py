@@ -93,6 +93,16 @@ def load_daily_ticker_data(ticker: str, start_date: str) -> Optional[pd.DataFram
         return None
 
 
+@st.cache_data(ttl=3600, max_entries=100)
+def load_ticker_currency(ticker: str) -> Optional[str]:
+    """Read the quote currency without guessing from a ticker's exchange suffix."""
+    try:
+        currency = yf.Ticker(ticker).get_history_metadata().get("currency")
+        return currency if isinstance(currency, str) and currency.strip() else None
+    except Exception:
+        return None
+
+
 def validate_ticker(ticker: str) -> bool:
     """
     Validate if a ticker symbol exists and has data.

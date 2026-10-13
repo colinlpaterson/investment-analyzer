@@ -41,6 +41,20 @@ This application provides powerful tools for analyzing stock and ETF performance
 - Identify the highest and lowest correlations in the selected group
 - Track how correlation between a selected pair changes through time
 
+**4. :material/calculate: Portfolio analysis & optimization**
+- Enter tickers and weights, normalize allocations, and save portfolio assumptions
+- Check quote currencies, data availability, and the usable common history
+- Backtest rebalancing, compare performance and drawdowns, and examine risk contributions
+- Set weight caps and compare current, minimum-volatility, and maximum-Sharpe allocations
+- Explore the efficient frontier and sensitivity to the estimation period
+- Assess allocations on held-out history and export performance, risk, and validation results
+
+**5. 🎲 Portfolio simulation**
+- Simulate the current portfolio or carry an optimized allocation into simulation
+- Model contributions and rebalancing using correlated historical return blocks
+- Explore outcome ranges and probabilities of reaching an ending-value target
+- Export monthly summaries and scenario outcomes with their simulation settings
+
 ### 🚀 Getting Started
 
 1. Select an analysis tool from the sidebar

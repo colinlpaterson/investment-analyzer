@@ -243,8 +243,8 @@ else:
                 f"{tickers[0]} and {tickers[1]}."
             )
         st.caption(
-            f"Common return period: **{actual_start:%b %d, %Y}** to "
-            f"**{actual_end:%b %d, %Y}**"
+            f"Common return period: **{actual_start:%m/%d/%Y}** to "
+            f"**{actual_end:%m/%d/%Y}**"
         )
 
         if analysis_view == "matrix":
