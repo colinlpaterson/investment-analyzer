@@ -129,6 +129,10 @@ Portfolio data uses adjusted-close total returns only. All entered holdings
 verified, matching quote currency. Missing tickers, invalid prices, duplicate dates,
 and gaps within the common period block data readiness rather than silently changing
 the portfolio or filling prices. Holdings should have matching trading calendars.
+If Yahoo has not supplied adjusted closes for the latest rows, history ends at the
+last reported close and a warning identifies the omitted dates. Missing prices
+inside the history, non-finite values, and zero or negative prices still block
+analysis. A benchmark with pending closes cannot shorten the holdings' history.
 The requested end date is inclusive and must precede today. A benchmark must cover
 every portfolio date and cannot silently shorten the portfolio's history.
 

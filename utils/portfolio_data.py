@@ -35,6 +35,7 @@ universe so later optimization uses the same dates and securities.
     series = {}
     errors = []
     coverage = []
+    notices = []
     for ticker in definition.required_tickers:
         frame = ticker_data.get(ticker)
         if frame is None or frame.empty:
@@ -59,8 +60,24 @@ universe so later optimization uses the same dates and securities.
         if prices.empty:
             errors.append(f"{ticker}: no observations in the requested period.")
             continue
+        # Yahoo can publish the latest trading row before its closing prices.
+        # End the history at the last reported price, without filling a gap or
+        # dropping an interior observation (which would change daily returns).
+        last_reported = prices.last_valid_index()
+        if last_reported is not None and last_reported < prices.index[-1]:
+            pending = prices.loc[prices.index > last_reported]
+            notices.append(
+                f"{ticker}: adjusted closing prices are unavailable for "
+                f"{pending.index[0]:%m/%d/%Y}–{pending.index[-1]:%m/%d/%Y}. "
+                f"History ends at the last reported close on {last_reported:%m/%d/%Y}; "
+                "no prices were filled. Try again later for updated data."
+            )
+            prices = prices.loc[:last_reported]
         if not np.isfinite(prices.to_numpy()).all() or (prices <= 0).any():
-            errors.append(f"{ticker}: missing, non-finite, or non-positive adjusted prices.")
+            invalid = prices.index[~np.isfinite(prices.to_numpy()) | (prices.to_numpy() <= 0)]
+            dates_text = ", ".join(day.strftime("%m/%d/%Y") for day in invalid[:3])
+            errors.append(f"{ticker}: missing, non-finite, or non-positive adjusted prices on {dates_text}. "
+                          "Choose a period excluding these dates or retry when source data is available.")
             continue
         currency = currencies.get(ticker)
         if not isinstance(currency, str) or not currency.strip():
@@ -96,7 +113,6 @@ universe so later optimization uses the same dates and securities.
     returns = prices.pct_change(fill_method=None).iloc[1:]
     if not np.isfinite(returns.to_numpy()).all():
         raise ValueError("Price data produced non-finite returns.")
-    notices = []
     if common_start.date() > definition.start_date or common_end.date() < definition.end_date:
         notices.append(
             f"Requested {definition.start_date:%m/%d/%Y} to {definition.end_date:%m/%d/%Y}; usable common history is "

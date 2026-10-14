@@ -128,6 +128,42 @@ def test_multiple_failed_tickers_are_reported_together():
     assert "A:" in str(error.value) and "B:" in str(error.value)
 
 
+def test_missing_latest_closes_shorten_history_with_explicit_notices():
+    result = prepare(frames={"A": frame(prices=[100, 110, np.nan]),
+                             "B": frame(prices=[100, 99, np.nan])})
+    assert result.prices.index[-1] == pd.Timestamp("2024-01-03")
+    assert result.returns.iloc[0].tolist() == pytest.approx([.1, -.01])
+    for ticker in ("A", "B"):
+        assert any(f"{ticker}: adjusted closing prices are unavailable for 01/04/2024" in notice
+                   for notice in result.notices)
+    assert result.coverage["Last available"].tolist() == [date(2024, 1, 3)] * 2
+
+
+def test_multiple_pending_closes_align_to_last_common_reported_price():
+    dates = ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"]
+    result = prepare(frames={"A": frame(dates, [100, 110, np.nan, np.nan]),
+                             "B": frame(dates, [100, 99, 98, np.nan])})
+    assert len(result.prices) == 2
+    assert any("01/04/2024–01/05/2024" in notice for notice in result.notices)
+
+
+@pytest.mark.parametrize("values", [
+    [np.nan, np.nan, np.nan], [np.nan, 100, 110], [100, np.nan, 110, np.nan],
+    [100, 110, 0], [100, 110, -1], [100, 110, np.inf],
+])
+def test_pending_close_handling_preserves_invalid_history_checks(values):
+    dates = pd.bdate_range("2024-01-02", periods=len(values))
+    with pytest.raises(ValueError, match="B: missing, non-finite, or non-positive adjusted prices on"):
+        prepare(frames={"A": frame(), "B": frame(dates, values)})
+
+
+def test_pending_benchmark_close_cannot_shorten_holdings_history():
+    with pytest.raises(ValueError, match="benchmark does not cover every portfolio date"):
+        prepare(definition(benchmark="C"),
+                {"A": frame(), "B": frame(), "C": frame(prices=[100, 110, np.nan])},
+                {"A": "USD", "B": "USD", "C": "USD"})
+
+
 @pytest.mark.parametrize("currency, message", [(None, "could not be verified"), ("EUR", "share a quote currency")])
 def test_currencies_are_verified(currency, message):
     with pytest.raises(ValueError, match=message):
