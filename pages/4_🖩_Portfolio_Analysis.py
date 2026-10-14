@@ -8,7 +8,7 @@ from utils.portfolio_optimization_ui import render_optimization
 
 
 st.set_page_config(page_title="Portfolio analysis", page_icon=":material/calculate:", layout="wide")
-st.title("Portfolio analysis & optimization", icon=":material/calculate:")
+st.title(":material/calculate: Portfolio analysis & optimization")
 st.markdown("Analyze historical growth, drawdowns, and the risk behind your allocation.")
 data = render_portfolio_builder("portfolio_analysis")
 if data is not None:
