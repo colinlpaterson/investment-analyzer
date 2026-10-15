@@ -1,5 +1,5 @@
 """
-Data fetching utilities for stock performance analysis.
+Data fetching utilities for Yahoo Finance price data and ticker validation.
 """
 import yfinance as yf
 import pandas as pd

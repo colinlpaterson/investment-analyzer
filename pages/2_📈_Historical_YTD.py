@@ -27,13 +27,13 @@ from utils.chart_builder import create_ytd_plotly_chart
 
 # Page configuration
 st.set_page_config(
-    page_title="Historical YTD Analysis",
+    page_title="Historical YTD analysis",
     page_icon="📈",
     layout="wide"
 )
 
 # Title and description
-st.title("📈 Historical Year-to-Date Performance")
+st.title("📈 Historical year-to-date performance")
 st.markdown("""
 Analyze year-to-date (YTD) price or total returns for any stock or ETF across multiple years.
 Compare current year performance against historical trends to identify patterns and outliers.

@@ -29,7 +29,7 @@ from utils.chart_builder import create_multi_ticker_comparison_chart
 
 # Page configuration
 st.set_page_config(
-    page_title="Multi-Ticker Comparison",
+    page_title="Multi-ticker comparison",
     page_icon="📊",
     layout="wide"
 )
@@ -39,7 +39,7 @@ if 'ticker_list' not in st.session_state:
     st.session_state.ticker_list = []
 
 # Title and description
-st.title("📊 Multi-Ticker YTD Comparison")
+st.title("📊 Multi-ticker YTD comparison")
 st.markdown("""
 Compare year-to-date performance across multiple stocks and ETFs. 
 The chart shows current period performance against the prior year's performance for the same time period.
