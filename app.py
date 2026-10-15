@@ -24,18 +24,18 @@ Powerful tools for exploring and analyzing stocks, ETFs, and investment portfoli
 
 #### 📈 Available Analysis Tools
 
-**1. Multi-Ticker Comparison**
+**1. 📊 Multi-ticker comparison**
 - Compare YTD performance across multiple tickers
 - View current year vs. last year performance
 - Analyze relative strength between different assets
 
-**2. Historical YTD Analysis**
+**2. 📈 Historical YTD analysis**
 - Compare current year performance against multiple historical years
 - Identify best and worst performing years
 - View historical averages and trends
 - Analyze any stock or ETF ticker
 
-**3. Correlation Analysis**
+**3. 🔗 Correlation analysis**
 - Compare how closely the periodic returns of 2–10 securities move together
 - Choose price or total returns and daily, weekly, or monthly frequency
 - Identify the highest and lowest correlations in the selected group

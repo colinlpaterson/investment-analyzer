@@ -6,18 +6,18 @@ Powerful tools for exploring and analyzing stocks, ETFs, and investment portfoli
 
 ## Features
 
-### 📊 Multi-Ticker Comparison
+### 📊 Multi-ticker comparison
 - Compare price or total-return YTD performance across multiple tickers simultaneously
 - View last full year's performance (dashed lines) alongside current YTD
 - Color-coded visualization for easy comparison
 - Available for any ticker supported by Yahoo Finance
 
-### 📈 Historical YTD Performance
+### 📈 Historical YTD performance
 - View price return or adjusted-close total return for any stock ticker
 - Compare current year against historical years
 - Available for any ticker supported by Yahoo Finance
 
-### 🔗 Correlation Analysis
+### 🔗 Correlation analysis
 - Compare Pearson correlations across 2–10 stocks and ETFs
 - Choose price or total returns, lookback period, and return frequency
 - View an annotated heatmap and the highest and lowest correlation pairs
@@ -86,18 +86,18 @@ The app will open in your default browser at `http://localhost:8501`
 
 ### Using the App
 
-**Multi-Ticker Comparison:**
+**Multi-ticker comparison:**
 1. Navigate to the "Ticker Comparison" page
 2. Add 2–5 popular or custom ticker symbols
 3. View comparative YTD performance and last year's full performance
 4. Use the color-coded charts to identify relative performance
 
-**Historical YTD Analysis:**
+**Historical YTD analysis:**
 1. Navigate to the "Historical YTD" page
 2. Enter a stock ticker (e.g., SPY, AAPL, MSFT)
 3. Select a start year (e.g., 2004)
 
-**Correlation Analysis:**
+**Correlation analysis:**
 1. Navigate to the "Correlation Analysis" page
 2. Choose the static matrix or rolling-pair view
 3. Select or enter the ticker symbols to analyze
@@ -312,19 +312,40 @@ not tax-aware and may differ from an investor's realized return.
 
 ```
 investment-analyzer/
-├── app.py                      # Main Streamlit application
+├── app.py                              # Landing page
 ├── pages/
-│   ├── 1_📈_Historical_YTD.py   # Historical YTD comparison page
-│   ├── 2_📊_Ticker_Comparison.py # Multi-ticker comparison page
-│   └── 3_🔗_Correlation_Analysis.py # Static and rolling correlation analysis
+│   ├── 1_📊_Ticker_Comparison.py       # Multi-ticker YTD comparison
+│   ├── 2_📈_Historical_YTD.py          # Historical YTD analysis
+│   ├── 3_🔗_Correlation_Analysis.py    # Static and rolling correlation
+│   ├── 4_🖩_Portfolio_Analysis.py      # Portfolio backtest, optimization, holdout
+│   └── 5_🎲_Portfolio_Simulation.py    # Block-bootstrap portfolio simulation
 ├── utils/
 │   ├── __init__.py
-│   ├── correlation_analysis.py # Return-matrix and correlation calculations
-│   ├── data_fetcher.py         # Data retrieval functions
-│   └── chart_builder.py        # Plotting and visualization functions
-├── requirements.txt            # Python dependencies
-├── .gitignore                 # Git ignore file
-└── README.md                  # This file
+│   ├── data_fetcher.py                 # Yahoo Finance downloads and ticker validation
+│   ├── chart_builder.py                # Plotly charts for YTD and comparison pages
+│   ├── ytd_analysis.py                 # Year-to-date return calculations
+│   ├── multi_ticker_analysis.py        # Multi-ticker comparison logic
+│   ├── correlation_analysis.py         # Return matrices and correlations
+│   ├── portfolio.py                    # Portfolio definition and validation
+│   ├── portfolio_state.py              # Session state shared by portfolio pages
+│   ├── portfolio_data.py               # Validated total-return inputs
+│   ├── portfolio_analysis.py           # Historical accounting and statistics
+│   ├── portfolio_optimization.py       # Constrained mean-variance optimization
+│   ├── portfolio_evaluation.py         # Chronological holdout evaluation
+│   ├── portfolio_simulation.py         # Correlated circular-block bootstrap
+│   ├── portfolio_charts.py             # Portfolio Plotly charts
+│   ├── portfolio_exports.py            # CSV exports
+│   ├── portfolio_ui.py                 # Shared portfolio editor and readiness view
+│   ├── portfolio_analysis_ui.py        # Historical results UI
+│   ├── portfolio_optimization_ui.py    # Optimization UI
+│   └── portfolio_simulation_ui.py      # Simulation UI
+├── tests/                              # Offline pytest suite (synthetic data, mocked downloads)
+├── .github/workflows/tests.yml         # CI on minimum and current dependencies
+├── requirements.txt                    # Runtime dependencies
+├── requirements-dev.txt                # Test dependencies
+├── PROJECT_SUMMARY.md                  # Project overview and deployment details
+├── LICENSE
+└── README.md
 ```
 
 ## Technologies Used
