@@ -108,32 +108,13 @@ streamlit run app.py
 
 ---
 
-## 🚀 Next Steps: Deployment
+## 🚀 Deployment
 
-### Phase 3: GitHub & Streamlit Cloud Deployment
-
-1. **Push to GitHub**
-   ```bash
-   # In your project directory
-   git init
-   git add .
-   git commit -m "Initial commit: Investment Analyzer"
-   git remote add origin https://github.com/colinlpaterson/investment-analyzer.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-2. **Deploy to Streamlit Cloud**
-   - Go to https://share.streamlit.io/
-   - Sign in with GitHub
-   - Click "New app"
-   - Select your repository
-   - Main file: `app.py`
-   - Click "Deploy"
-
-3. **Get Public URL**
-   - Your app will be live at: `https://your-app-name.streamlit.app/`
-   - Share with others!
+- **Live app:** [Investment Analyzer](https://investment-analyzer-portfolios.streamlit.app/)
+- **GitHub repository:** [colinlpaterson/investment-analyzer](https://github.com/colinlpaterson/investment-analyzer)
+- **Branch:** `main`
+- **Entrypoint:** `app.py`
+- **Hosting:** Streamlit Community Cloud
 
 ---
 

@@ -1,5 +1,7 @@
 # Investment Analyzer
 
+[Open the live app](https://investment-analyzer-portfolios.streamlit.app/)
+
 Powerful tools for exploring and analyzing stocks, ETFs, and investment portfolios—from historical performance and correlations to portfolio optimization and simulation.
 
 ## Features
