@@ -355,6 +355,8 @@ investment-analyzer/
 - **Plotly**: Interactive charting
 - **Pandas**: Data manipulation
 - **NumPy**: Numerical computations
+- **SciPy**: Constrained portfolio optimization (SLSQP solver)
+- **scikit-learn**: Ledoit–Wolf covariance shrinkage for optimization
 
 ## Tests
 
