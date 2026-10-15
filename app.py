@@ -1,24 +1,24 @@
 """
-Stock Performance Analyzer - Main Application
-A Streamlit app for analyzing and comparing stock and ETF performance.
+Investment Analyzer - Main Application
+A Streamlit app for analyzing stocks, ETFs, and investment portfolios.
 """
 import streamlit as st
 
 # Page configuration
 st.set_page_config(
-    page_title="Stock Performance Analyzer",
+    page_title="Investment Analyzer",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Main page
-st.title("📊 Stock Performance Analyzer")
+st.title("📊 Investment Analyzer")
 st.markdown("---")
 
 # Welcome message
 st.markdown("""
-### Welcome to the Stock Performance Analyzer!
+### Welcome to the Investment Analyzer!
 
 Powerful tools for exploring and analyzing stocks, ETFs, and investment portfolios—from historical performance and correlations to portfolio optimization and simulation.
 
@@ -100,7 +100,7 @@ with st.sidebar:
     
     **Created by:** Colin Paterson
     
-    **GitHub:** [stock-performance-analyzer](https://github.com/colinlpaterson/stock-performance-analyzer)
+    **GitHub:** [investment-analyzer](https://github.com/colinlpaterson/investment-analyzer)
     """)
     
     st.markdown("---")
@@ -110,4 +110,4 @@ with st.sidebar:
 
 # Footer
 st.markdown("---")
-st.caption("© 2026 Stock Performance Analyzer | Data provided by Yahoo Finance | For educational purposes only")
+st.caption("© 2026 Investment Analyzer | Data provided by Yahoo Finance | For educational purposes only")

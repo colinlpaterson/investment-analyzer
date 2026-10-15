@@ -1,4 +1,4 @@
-# Stock Performance Analyzer
+# Investment Analyzer
 
 Powerful tools for exploring and analyzing stocks, ETFs, and investment portfolios—from historical performance and correlations to portfolio optimization and simulation.
 
@@ -56,8 +56,8 @@ Powerful tools for exploring and analyzing stocks, ETFs, and investment portfoli
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/colinlpaterson/stock-performance-analyzer.git
-cd stock-performance-analyzer
+git clone https://github.com/colinlpaterson/investment-analyzer.git
+cd investment-analyzer
 ```
 
 2. Create a virtual environment (recommended):
@@ -309,7 +309,7 @@ not tax-aware and may differ from an investor's realized return.
 ## Project Structure
 
 ```
-stock-performance-analyzer/
+investment-analyzer/
 ├── app.py                      # Main Streamlit application
 ├── pages/
 │   ├── 1_📈_Historical_YTD.py   # Historical YTD comparison page

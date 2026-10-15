@@ -1,4 +1,4 @@
-# Stock Performance Analyzer - Project Summary
+# Investment Analyzer - Project Summary
 
 ## ✅ Phase 2 Complete: Multi-Ticker Comparison
 
@@ -49,7 +49,7 @@
 ## 📁 Complete Project Structure
 
 ```
-stock-performance-analyzer/
+investment-analyzer/
 ├── app.py                              # Main landing page
 ├── pages/
 │   ├── 1_📈_Historical_YTD.py          # Historical YTD analysis
@@ -77,7 +77,7 @@ stock-performance-analyzer/
 conda activate stock-analyzer
 
 # Navigate to project
-cd C:\path\to\stock-performance-analyzer
+cd C:\path\to\investment-analyzer
 
 # Run app
 streamlit run app.py
@@ -117,8 +117,8 @@ streamlit run app.py
    # In your project directory
    git init
    git add .
-   git commit -m "Initial commit: Stock Performance Analyzer"
-   git remote add origin https://github.com/colinlpaterson/stock-performance-analyzer.git
+   git commit -m "Initial commit: Investment Analyzer"
+   git remote add origin https://github.com/colinlpaterson/investment-analyzer.git
    git branch -M main
    git push -u origin main
    ```
